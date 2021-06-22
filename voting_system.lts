@@ -40,13 +40,31 @@ BOOTH[e:Eo_state][v:V_state] =
 ). 
 
 //Voting system process, synchronized with v.enter and password, checks to make sure someone is in booth at every step
+//Do not let people leave during the non-existent time between the check and the action 
+
 VOTE = (v.enter -> password -> AUTH), 
 AUTH = (check[e:Eo_state][v:V_state] -> if !(e == No_eo && v == No_v) then (select -> VOTE_STATE)
-																	  else AUTH),
+																	  else AUTH
+		|eo.out -> AUTH
+		|v.out -> AUTH
+		|eo.in -> AUTH
+		|v.in -> AUTH),
+
 VOTE_STATE = (check[e:Eo_state][v:V_state] -> if !(e == No_eo && v == No_v) then (unselect -> AUTH | vote -> VOTED)
-																	  else VOTE_STATE),
+																	  else VOTE_STATE
+		|eo.out -> VOTE_STATE
+		|v.out -> VOTE_STATE
+		|eo.in -> VOTE_STATE
+		|v.in -> VOTE_STATE),
+
 VOTED = (check[e:Eo_state][v:V_state] -> if !(e == No_eo && v == No_v) then (unvote-> VOTE_STATE | confirm -> exit -> VOTE)
-																	  else VOTE). 
+																	   else VOTED
+		|eo.out -> VOTED
+		|v.out -> VOTED
+		|eo.in -> VOTED
+		|v.in -> VOTED
+		
+). 
  
 
 ||VOTE_SYS = (BOOTH || VOTE)/{exit/v.exit, exit/eo.exit}. //synchronize so that exit happens at once
