@@ -13,39 +13,30 @@ const Yes_v = 3
 
 range V_state = No_v .. Yes_v
 
-//constant for whether or not the process has started to see whether free entry/exit is allowed rather than the one that is snyched with the system
-const No_start = 4
-const Yes_start = 5
-
-range VoteStatus = No_start .. Yes_start
-
 
 //Booth process 
-BOOTH = BOOTH[No_eo][No_v][No_start],
-BOOTH[e:Eo_state][v:V_state][s:VoteStatus] = 
+BOOTH = (v.enter -> password -> BOOTH[No_eo][Yes_v]),
+BOOTH[e:Eo_state][v:V_state] = 
 (
-		when (e == No_eo && v == No_v && s == No_start)
-			v.enter -> password -> BOOTH[No_eo][Yes_v][Yes_start]
+		when (e == No_eo && v == No_v)
+			eo.in -> BOOTH[Yes_eo][No_v]
 		|
-		when (e == No_eo && v == No_v && s == Yes_start)
-			eo.in -> BOOTH[Yes_eo][No_v][Yes_start]
+		when (e == No_eo && v == No_v)
+			v.in -> BOOTH[No_eo][Yes_v]
 		|
-		when (e == No_eo && v == No_v && s == Yes_start)
-			v.in -> BOOTH[No_eo][Yes_v][Yes_start]
+		when (e == No_eo && v == Yes_v)
+			v.out -> BOOTH[No_eo][No_v]
 		|
-		when (e == No_eo && v == Yes_v && s == Yes_start)
-			v.out -> BOOTH[No_eo][No_v][Yes_start]
+		when (e == Yes_eo && v == No_v)
+			eo.out -> BOOTH[No_eo][No_v]
 		|
-		when (e == Yes_eo && v == No_v && s == Yes_start)
-			eo.out -> BOOTH[No_eo][No_v][Yes_start]
+		when (e == No_eo && v == Yes_v)
+			confirm -> v.exit -> BOOTH
 		|
-		when (e == No_eo && v == Yes_v && s == Yes_start)
-			confirm -> v.exit -> BOOTH[No_eo][No_v][No_start]
+		when (e == Yes_eo && v == No_v)
+			confirm -> eo.exit -> BOOTH
 		|
-		when (e == Yes_eo && v == No_v && s == Yes_start)
-			confirm -> eo.exit -> BOOTH[No_eo][No_v][No_start]
-		|
-		check[e][v] -> BOOTH[e][v][s]
+		check[e][v] -> BOOTH[e][v]
 ). 
 
 //Voting system process, synchronized with v.enter and password, checks to make sure someone is in booth at every step
@@ -59,8 +50,3 @@ VOTED = (check[e:Eo_state][v:V_state] -> if !(e == No_eo && v == No_v) then (unv
  
 
 ||VOTE_SYS = (BOOTH || VOTE)/{exit/v.exit, exit/eo.exit}. //synchronize so that exit happens at once
-
-
-
-
-
