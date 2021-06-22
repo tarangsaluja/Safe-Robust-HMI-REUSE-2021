@@ -1,0 +1,66 @@
+//Constants and ranges
+
+
+//constant for whether or not official is in booth
+const No_eo = 0
+const Yes_eo = 1
+
+range Eo_state = No_eo .. Yes_eo
+
+//constant for whether or not voter is in booth
+const No_v = 2
+const Yes_v = 3
+
+range V_state = No_v .. Yes_v
+
+//constant for whether or not the process has started to see whether free entry/exit is allowed rather than the one that is snyched with the system
+const No_start = 4
+const Yes_start = 5
+
+range VoteStatus = No_start .. Yes_start
+
+
+//Booth process 
+BOOTH = BOOTH[No_eo][No_v][No_start],
+BOOTH[e:Eo_state][v:V_state][s:VoteStatus] = 
+(
+		when (e == No_eo && v == No_v && s == No_start)
+			v.enter -> password -> BOOTH[No_eo][Yes_v][Yes_start]
+		|
+		when (e == No_eo && v == No_v && s == Yes_start)
+			eo.in -> BOOTH[Yes_eo][No_v][Yes_start]
+		|
+		when (e == No_eo && v == No_v && s == Yes_start)
+			v.in -> BOOTH[No_eo][Yes_v][Yes_start]
+		|
+		when (e == No_eo && v == Yes_v && s == Yes_start)
+			v.out -> BOOTH[No_eo][No_v][Yes_start]
+		|
+		when (e == Yes_eo && v == No_v && s == Yes_start)
+			eo.out -> BOOTH[No_eo][No_v][Yes_start]
+		|
+		when (e == No_eo && v == Yes_v && s == Yes_start)
+			confirm -> v.exit -> BOOTH[No_eo][No_v][No_start]
+		|
+		when (e == Yes_eo && v == No_v && s == Yes_start)
+			confirm -> eo.exit -> BOOTH[No_eo][No_v][No_start]
+		|
+		check[e][v] -> BOOTH[e][v][s]
+). 
+
+//Voting system process, synchronized with v.enter and password, checks to make sure someone is in booth at every step
+VOTE = (v.enter -> password -> AUTH), 
+AUTH = (check[e:Eo_state][v:V_state] -> if !(e == No_eo && v == No_v) then (select -> VOTE_STATE)
+																	  else AUTH),
+VOTE_STATE = (check[e:Eo_state][v:V_state] -> if !(e == No_eo && v == No_v) then (unselect -> AUTH | vote -> VOTED)
+																	  else VOTE_STATE),
+VOTED = (check[e:Eo_state][v:V_state] -> if !(e == No_eo && v == No_v) then (unvote-> VOTE_STATE | confirm -> exit -> VOTE)
+																	  else VOTE). 
+ 
+
+||VOTE_SYS = (BOOTH || VOTE)/{exit/v.exit, exit/eo.exit}. //synchronize so that exit happens at once
+
+
+
+
+
