@@ -1,0 +1,33 @@
+//Human process
+
+HUMAN = (password -> HUMAN
+		|gibberish -> HUMAN
+		|select_server -> get_server -> (reject_server -> HUMAN | enter_id_password -> HUMAN_AUTHENTICATED)), 
+HUMAN_AUTHENTICATED = (human_msg -> see_msg -> (verify_message -> HUMAN_MESSAGE_AUTHENTICATED | reject_message -> HUMAN_AUTHENTICATED)
+					  |exit -> HUMAN),
+HUMAN_MESSAGE_AUTHENTICATED = (exit -> HUMAN_MESSAGE_AUTHENTICATED).
+
+ 
+//Platform Process 
+
+PLATFORM = (password -> PLATFORM
+		   |gibberish -> PLATFORM 
+		   |select_server -> server_platform_connect -> get_server -> (reject_server -> PLATFORM | enter_id_password -> CONNECTED_PLATFORM)), 
+CONNECTED_PLATFORM = (encr_info -> relay_encr_info -> server_encr_info -> CONNECTED_PLATFORM
+					 | human_msg -> encr_msg -> CONNECTED_PLATFORM
+					 |exit -> PLATFORM). 
+
+
+//Device Process
+DEVICE = (get_server -> (reject_server -> DEVICE | enter_id_password -> CONNECTED_DEVICE)), 
+CONNECTED_DEVICE = (encr_info -> server_encr_info -> check_info -> CONNECTED_DEVICE
+				   |human_msg -> encr_msg -> decr_msg -> see_msg -> CONNECTED_DEVICE
+				   |exit -> DEVICE). 
+
+
+//server process
+SERVER = (server_platform_connect -> (reject_server -> SERVER | enter_id_password -> CONNECTED_SERVER)),
+CONNECTED_SERVER = (server_encr_info -> check_info -> (success -> SERVER_AUTH | failure -> CONNECTED_SERVER)
+					|exit -> SERVER), 
+SERVER_AUTH = (human_msg -> encr_msg -> SERVER_AUTH). 
+
