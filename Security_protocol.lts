@@ -1,9 +1,10 @@
+
 //Human process
 
 HUMAN = (password -> HUMAN
 		|gibberish -> HUMAN
 		|select_server -> get_server -> (reject_server -> HUMAN | enter_id_password -> accept_server -> HUMAN_AUTHENTICATED)), 
-HUMAN_AUTHENTICATED = (human_msg -> see_msg -> (verify_message -> HUMAN_MESSAGE_AUTHENTICATED | reject_message -> HUMAN_AUTHENTICATED)
+HUMAN_AUTHENTICATED = (human_msg -> see_msg -> (verify_msg -> HUMAN_MESSAGE_AUTHENTICATED | reject_message -> HUMAN_AUTHENTICATED)
 					  |exit -> HUMAN), 
 HUMAN_MESSAGE_AUTHENTICATED = (exit -> HUMAN).
 
@@ -39,7 +40,7 @@ SERVER_AUTH = (human_msg -> encr_msg -> SERVER_AUTH
 //adversary process
 ADVERSARY = (password -> adversary_attacks -> ADVERSARY
 			|human_msg -> (encr_msg -> decr_msg -> see_msg -> verify_msg -> ADVERSARY
-						   |adversary_msg -> encr_msg -> decr_msg -> see_msg -> (verify_message -> adversary_attacks -> ADVERSARY| reject_message -> ADVERSARY))).
+						   |adversary_msg -> encr_msg -> decr_msg -> see_msg -> (verify_msg -> adversary_attacks -> ADVERSARY| reject_message -> ADVERSARY))).
 
 
 ||SYS = (HUMAN || PLATFORM || DEVICE || SERVER || ADVERSARY). 
