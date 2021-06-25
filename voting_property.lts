@@ -1,2 +1,2 @@
-P = (eo.select -> P | v.vote -> P2),
-P2 = (v.vote -> P2).
+P = (select -> P | eo.enter -> P2), 
+P2 = (eo.enter -> P2 | eo.exit -> P).
