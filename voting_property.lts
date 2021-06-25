@@ -1,0 +1,2 @@
+P = (eo.select -> P | v.vote -> P2),
+P2 = (v.vote -> P2).
